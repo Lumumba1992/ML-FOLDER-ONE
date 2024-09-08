@@ -1,0 +1,455 @@
+---
+title: "KENYA's DEMOGRAPHIC DATA BY COUNTIES"
+author: "Lumumba Wandera Victor"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  pdf_document
+---
+
+\newpage
+\tableofcontents
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE,comment = NA, message=FALSE,
+                      fig.height=4, fig.width=6)
+```
+
+\newpage
+### Load the Following Libraries
+```{r}
+#remotes::install_github("Shelmith-Kariuki/rKenyaCensus")
+```
+
+```{r}
+library(rKenyaCensus)
+library(tidyverse)
+```
+
+### Read More about rKenyaCensus Package
+```{r}
+help(package = "rKenyaCensus")
+```
+
+### The dataset Containing Distribution of Religion in Various Counties
+```{r}
+V4_T2.30
+```
+
+### Create an Object Religion
+```{r}
+religion <- V4_T2.30
+```
+
+### View the Data Set
+```{r}
+head(religion, 10)
+view(religion)
+```
+
+### Distribution of Religion (Muslim) by Counties
+```{r fig.height=7}
+religion_prop <- religion %>% 
+  filter(County != "KENYA") %>%
+  mutate(county_title = str_to_title(County),
+         prop_islam = Islam / Total)
+ggplot(religion_prop, aes(x = prop_islam,
+                          y = reorder(county_title, prop_islam))) +
+  geom_col(fill = "navy", alpha = 0.6) +
+  theme_minimal(base_size = 12.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Percent MuslimbyCountyinKenya",
+       subtitle = "2019 KenyanCensus",
+       x = "",
+       y = "",
+       caption = "Data source:rKenyaCensusRpackage")
+```
+
+### Distribution of Religion (Muslim) by Counties
+```{r catholic distribution in kenya, fig.height=8}
+religion_prop <- religion %>% 
+  filter(County != "KENYA") %>%
+  mutate(county_title = str_to_title(County),
+         prop_catholic = Catholic / Total)
+ggplot(religion_prop, aes(x = prop_catholic,
+                          y = reorder(county_title, prop_catholic))) +
+  geom_col(fill = "navy", alpha = 0.6) +
+  theme_minimal(base_size = 12.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Percent CatholicbyCountyinKenya",
+       subtitle = "2019 KenyanCensus",
+       x = "",
+       y = "",
+       caption = "Data source:rKenyaCensusRpackage")
+```
+
+### Plot the Map
+```{r}
+library(sf)
+library(sp)
+kenya_counties_sf <- st_as_sf(KenyaCounties_SHP)
+ggplot(kenya_counties_sf) +
+geom_sf() +
+theme_void()
+```
+
+### Loading Required Packages
+The first two lines load the required R packages: sf and sp. These packages are commonly used for working with spatial data in R. sf is a package for simple feature objects, while sp is a package for spatial data classes and methods.
+
+### Loading Spatial Data
+The st_as_sf() function from the sf package is used to convert spatial data stored in a different format (e.g., shapefile) into an sf object. KenyaCounties_SHP is assumed to be a shapefile containing information about the counties of Kenya.
+
+### Creating a Plot 
+The ggplot() function from the ggplot2 package is used to initialize a new ggplot object. This object will be used to create the plot.
+
+### Adding Spatial Features to the Plot
+The geom_sf() function is used to add the spatial features (e.g., polygons representing counties) to the plot. It is specifically designed for plotting sf objects in ggplot.
+
+### Styling the Plot
+The theme_void() function is used to apply a theme to the plot. In this case, theme_void() creates a plot with a blank (void) background and no axis lines or tick marks. This function is often used when you only want to display the spatial features without any additional elements.
+
+Overall, this code creates a plot of the counties of Kenya using spatial data stored in an sf object, with a minimalistic style applied to the plot using ggplot2.
+
+### Plot Map for the Distribution of Muslim
+```{r fig.height=7}
+
+religion_prop <- religion %>% 
+  filter(County != "KENYA") %>%
+  mutate(county_title = str_to_title(County),
+         prop_islam = Islam / Total)
+ggplot(religion_prop, aes(x = prop_islam,
+                          y = reorder(county_title, prop_islam))) +
+  geom_col(fill = "navy", alpha = 0.6) +
+  theme_minimal(base_size = 12.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Percent MuslimbyCountyinKenya",
+       subtitle = "2019 KenyanCensus",
+       x = "",
+       y = "",
+       caption = "Data source:rKenyaCensusRpackage")
+
+
+kenya_islam_map <- kenya_counties_sf %>%
+  mutate(County = str_remove(County, " CITY")) %>%
+  left_join(religion_prop, by = "County")
+ggplot(kenya_islam_map, aes(fill = prop_islam)) +
+  geom_sf() +
+  scale_fill_viridis_c(labels = scales::percent) +
+  theme_void() +
+  labs(fill = "% Muslim",
+       title = "Percent MuslimbyCountyinKenya",
+       subtitle = "2019 KenyanCensus",
+       caption = "Data acquiredwiththerKenyaCensusRpackage")
+```
+
+### Plot Map for the Distribution of Muslim
+```{r fig.height=7}
+##Graph
+religion_prop <- religion %>% 
+  filter(County != "KENYA") %>%
+  mutate(county_title = str_to_title(County),
+         prop_catholic = Catholic / Total)
+ggplot(religion_prop, aes(x = prop_catholic,
+                          y = reorder(county_title, prop_catholic))) +
+  geom_col(fill = "navy", alpha = 0.6) +
+  theme_minimal(base_size = 12.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Percent CatholicbyCountyinKenya",
+       subtitle = "2019 KenyanCensus",
+       x = "",
+       y = "",
+       caption = "Data source:rKenyaCensusRpackage")
+
+## Map
+kenya_catholic_map <- kenya_counties_sf %>%
+  mutate(County = str_remove(County, " CITY")) %>%
+  left_join(religion_prop, by = "County")
+ggplot(kenya_catholic_map, aes(fill = prop_catholic)) +
+  geom_sf() +
+  scale_fill_viridis_c(labels = scales::percent) +
+  theme_void() +
+  labs(fill = "% Catholic",
+       title = "Percent CatholicbyCountyinKenya",
+       subtitle = "2019 KenyanCensus",
+       caption = "Data acquiredwiththerKenyaCensusRpackage")
+```
+### Distribution of Gender
+```{r}
+V1_T2.2
+```
+
+### Create the Object Gender
+```{r}
+gender <- V1_T2.2
+```
+
+### Plot the Distribution Male Population by Counties
+```{r fig.height=9}
+male_prop <- gender %>% 
+  filter(County != "KENYA") %>%
+  mutate(county_title = str_to_title(County),
+         prop_male = Male / Total)
+ggplot(male_prop, aes(x = prop_male,
+                          y = reorder(county_title, prop_male))) +
+  geom_col(fill = "navy", alpha = 0.6) +
+  theme_minimal(base_size = 12.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Percent MalebyCountyinKenya",
+       subtitle = "2019 KenyanCensus",
+       x = "",
+       y = "",
+       caption = "Data source:rKenyaCensusRpackage")
+```
+
+### Plot the Distribution Female Population by Counties
+```{r fig.height=9}
+Female_prop <- gender %>% 
+  filter(County != "KENYA") %>%
+  mutate(county_title = str_to_title(County),
+         prop_female = Female / Total)
+ggplot(Female_prop, aes(x = prop_female,
+                          y = reorder(county_title, prop_female))) +
+  geom_col(fill = "navy", alpha = 0.6) +
+  theme_minimal(base_size = 12.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Percent FemalebyCountyinKenya",
+       subtitle = "2019 KenyanCensus",
+       x = "",
+       y = "",
+       caption = "Data source:rKenyaCensusRpackage")
+```
+
+### Labor Force
+```{r}
+V4_T2.9c
+```
+
+### Learn more about the object V4_T2.9c (Labor Force)
+```{r}
+?V4_T2.9c
+```
+
+### View the Data
+```{r}
+View(V4_T2.9c)
+```
+
+### View data heads
+```{r}
+V1_T2.1	
+V1_T2.2	
+V1_T2.3	
+V1_T2.4
+V1_T2.5	
+V1_T2.6	
+V1_T2.7	
+V2_T1.1	
+V2_T1.2	
+V2_T2.1	
+V2_T2.2	
+V2_T2.2a	
+V2_T2.2b
+V2_T2.3	
+V2_T2.5	
+V3_T1.1
+V3_T1.2	
+V3_T2.1	
+V3_T2.2	
+V3_T2.2a	
+V3_T2.2b	
+V3_T2.3	
+V3_T2.4a	
+V3_T2.4b	
+V4_T1.1	
+V4_T1.9	
+V4_T2.10	
+V4_T2.11a
+V4_T2.11b	
+V4_T2.12	
+V4_T2.13	
+V4_T2.14	
+V4_T2.15	
+V4_T2.16	
+V4_T2.17
+V4_T2.18	
+V4_T2.19	
+V4_T2.2	
+V4_T2.20
+V4_T2.21
+V4_T2.22	
+V4_T2.23	
+V4_T2.24
+V4_T2.25
+V4_T2.26	
+V4_T2.27	
+V4_T2.28	
+V4_T2.29	
+V4_T2.3	
+V4_T2.30	
+V4_T2.31	
+V4_T2.32	
+V4_T2.33
+V4_T2.34	
+V4_T2.35	
+V4_T2.36	
+V4_T2.37	
+V4_T2.38	
+V4_T2.39	
+V4_T2.4	
+V4_T2.40	
+V4_T2.5	
+V4_T2.6a	
+V4_T2.6b	
+V4_T2.7	
+V4_T2.8a	
+V4_T2.8b	
+V4_T2.8c
+V4_T2.9a	
+V4_T2.9b	
+V4_T2.9c	
+```
+
+### Counties and SubCounty Codes
+```{r}
+Counties <- V3_T1.2
+Counties
+```
+
+### Education Attainment
+```{r}
+Education <- V4_T2.4
+Education
+```
+
+### Use of Internet
+```{r}
+internet <-V4_T2.35
+internet
+```
+
+### Map of Kenya showing the Population people using Internet in Kenya, per county
+```{r}
+library(sf)
+library(sp)
+kenya_counties_sf <- st_as_sf(KenyaCounties_SHP)
+ggplot(kenya_counties_sf) +
+geom_sf() +
+theme_void()
+```
+
+
+```{r fig.height=10}
+##Graph
+internet_prop <- internet %>% 
+  filter(County != "KENYA") %>%
+  mutate(county_title = str_to_title(County),
+         prop_internet = UseofInternet)
+ggplot(internet_prop, aes(x = prop_internet,
+                          y = reorder(county_title, prop_internet))) +
+  geom_col(fill = "navy", alpha = 0.6) +
+  theme_minimal(base_size = 12.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Percent of People using Internet by Counties",
+       subtitle = "2019 KenyanCensus",
+       x = "Percentages",
+       y = "Counties",
+       caption = "Data source:rKenyaCensusRpackage")
+```
+
+
+```{r}
+University <- V4_T2.3
+University
+#View(University)
+```
+
+### Merge two datasets in Rstudio
+When merging datasets in R, you can perform different types of joins to combine the data based on common variables. Here are some common types of joins and their characteristics:
+
+#### Inner Join:
+Retains only the rows where the keys (common variables) are present in both datasets.
+Other rows are dropped.
+Useful for combining only the matching records from both datasets.
+
+#### Left Join:
+Retains all rows from the left dataset (first dataset specified) and includes matching rows from the right dataset.
+If a key is present in the left dataset but not in the right dataset, missing values are filled with NA.
+Useful for preserving all observations from one dataset while adding information from another dataset.
+
+#### Right Join:
+Retains all rows from the right dataset (second dataset specified) and includes matching rows from the left dataset.
+If a key is present in the right dataset but not in the left dataset, missing values are filled with NA.
+Essentially the opposite of a left join.
+
+### Full Join:
+Retains all rows from both datasets.
+Includes matching rows from both datasets.
+If a key is present in one dataset but not in the other, missing values are filled with NA.
+Useful for combining all available information from both datasets.
+Here's how you can use these joins in R:
+
+inner_join(): For an inner join.
+left_join(): For a left join.
+right_join(): For a right join.
+full_join(): For a full join.
+You can use these functions from the dplyr package to perform joins based on common variables in your datasets. By understanding the characteristics of each join type, you can choose the appropriate type of join based on your specific data merging needs.
+```{r}
+library(dplyr)
+merged_data <- merge(Counties, University, by = "SubCounty", all.x = TRUE)
+merged_data <- inner_join(Counties, University, by = "SubCounty")
+merged_data
+```
+
+```{r}
+nd <- merged_data%>%
+  filter(Gender == "Total")
+nd
+```
+
+### Summaries to get total 
+```{r}
+Final <- nd %>%
+  group_by(County) %>%
+  summarise(
+    Total = sum(Total),
+    University = sum(University)
+  )
+
+Final
+```
+
+```{r fig.height=8, fig.width=7}
+##Graph
+uni_prop <- Final %>% 
+  filter(County != "KENYA") %>%
+  mutate(county_title = str_to_title(County),
+         prop_uni = University/Total)
+ggplot(uni_prop, aes(x = prop_uni,
+                          y = reorder(county_title, prop_uni))) +
+  geom_col(fill = "navy", alpha = 0.6) +
+  theme_minimal(base_size = 12.5) +
+  scale_x_continuous(labels = scales::percent) +
+  labs(title = "Percentage of University Students by County",
+       subtitle = "2019 Kenyan Census",
+       x = "",
+       y = "",
+       caption = "Data source:rKenyaCensusRpackage")
+```
+
+```{r fig.height=6, fig.width=7}
+## Map
+kenya_uni_map <- kenya_counties_sf %>%
+  mutate(County = str_remove(County, " CITY")) %>%
+  left_join(uni_prop, by = "County")
+ggplot(kenya_uni_map, aes(fill = prop_uni)) +
+  geom_sf() +
+  scale_fill_viridis_c(labels = scales::percent) +
+  theme_void() +
+  labs(fill = "% University Students",
+       title = "Percent of University Students by County",
+       subtitle = "2019 Kenyan Census",
+       caption = "Data acquired with the rKenyaCensus Rpackage")
+
+```
+
+
+
+
